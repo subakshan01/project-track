@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://techtrack-api.onrender.com/api/$1" },
+    { "source": "/api/(.*)", "destination": "https://project-track-8i5i.onrender.com/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

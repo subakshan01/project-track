@@ -11,23 +11,39 @@ connectDB();
 
 const app = express();
 
-// Middleware
+// CORS configuration — MUST be before body parsers and routes
+const allowedOrigins = [
+  process.env.FRONTEND_REACT_URL || 'http://localhost:5173',
+  process.env.FRONTEND_ANGULAR_URL || 'http://localhost:4200',
+  'https://techtrack-student.vercel.app',
+  'https://techtrack-staff.vercel.app',
+  'https://project-track-8i5i.onrender.com'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, server-to-server)
+    if (!origin) return callback(null, true);
+    // Allow any *.vercel.app subdomain (covers preview deploys)
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    // Allow whitelisted origins
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow localhost in development
+    if (origin.match(/^https?:\/\/localhost(:\d+)?$/)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+// Handle preflight across all routes
+app.options('*', cors());
+
+// Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-
-// CORS configuration
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_REACT_URL || 'http://localhost:5173',
-    process.env.FRONTEND_ANGULAR_URL || 'http://localhost:4200',
-    'https://techtrack-student.vercel.app',
-    'https://techtrack-staff.vercel.app'
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
