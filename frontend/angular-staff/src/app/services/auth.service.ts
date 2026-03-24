@@ -4,7 +4,7 @@ import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = '/api';
+  private apiUrl = 'https://project-track-8i5i.onrender.com/api';
   private userSubject = new BehaviorSubject<any>(null);
   user$ = this.userSubject.asObservable();
 

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private api = '/api';
+  private api = 'https://project-track-8i5i.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
