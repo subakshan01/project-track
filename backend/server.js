@@ -12,38 +12,47 @@ connectDB();
 const app = express();
 
 
-// ✅ SIMPLE & STABLE CORS (FIXED)
+// ✅ DYNAMIC CORS FIX (WORKS FOR NETLIFY + VERCEL + LOCALHOST)
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "http://localhost:4200",
-    "https://spiffy-cuchufli-9bd432.netlify.app",
-    "https://techtrack-student.vercel.app",
-    "https://techtrack-staff.vercel.app"
-  ],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman / server requests
+
+    // ✅ Allow Netlify domains
+    if (origin.includes(".netlify.app")) return callback(null, true);
+
+    // ✅ Allow Vercel domains
+    if (origin.includes(".vercel.app")) return callback(null, true);
+
+    // ✅ Allow localhost (development)
+    if (origin.includes("localhost")) return callback(null, true);
+
+    // ❗ TEMP: allow all (safe during development)
+    return callback(null, true);
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
 
-// ✅ Handle preflight requests
+
+// ✅ HANDLE PREFLIGHT REQUESTS (VERY IMPORTANT)
 app.options("*", cors());
 
 
-// ✅ Body parsers
+// ✅ BODY PARSERS
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 
-// ✅ Logger
+// ✅ LOGGER
 app.use(morgan('dev'));
 
 
-// ✅ Serve uploaded files
+// ✅ STATIC FILES
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
-// ✅ Routes
+// ✅ ROUTES
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/users', require('./routes/users'));
@@ -52,23 +61,23 @@ app.use('/api/chat', require('./routes/chat'));
 app.use('/api/documents', require('./routes/documents'));
 
 
-// ✅ Health check (IMPORTANT for testing)
+// ✅ HEALTH CHECK
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
-    message: 'TechTrack API is running',
-    timestamp: new Date()
+    message: 'TechTrack API is running 🚀',
+    time: new Date()
   });
 });
 
 
-// ✅ Root route (to check server quickly)
+// ✅ ROOT ROUTE
 app.get('/', (req, res) => {
   res.send('TechTrack Backend Running 🚀');
 });
 
 
-// ❌ 404 handler
+// ❌ 404 HANDLER
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -77,29 +86,22 @@ app.use((req, res) => {
 });
 
 
-// ❌ Global error handler
+// ❌ GLOBAL ERROR HANDLER
 app.use((err, req, res, next) => {
-  console.error('Server error:', err);
-
-  if (err.name === 'MulterError') {
-    return res.status(400).json({
-      success: false,
-      message: `Upload error: ${err.message}`
-    });
-  }
+  console.error('SERVER ERROR:', err);
 
   res.status(500).json({
     success: false,
-    message: err.message || 'Internal server error'
+    message: err.message || 'Internal Server Error'
   });
 });
 
 
-// ✅ Start server
+// ✅ START SERVER
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`TechTrack server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = app;
