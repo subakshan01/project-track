@@ -11,44 +11,39 @@ connectDB();
 
 const app = express();
 
-// CORS configuration — MUST be before body parsers and routes
-const allowedOrigins = [
-  process.env.FRONTEND_REACT_URL || 'http://localhost:5173',
-  process.env.FRONTEND_ANGULAR_URL || 'http://localhost:4200',
-  'https://techtrack-student.vercel.app',
-  'https://techtrack-staff.vercel.app',
-  'https://project-track-8i5i.onrender.com'
-];
 
+// ✅ SIMPLE & STABLE CORS (FIXED)
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, server-to-server)
-    if (!origin) return callback(null, true);
-    // Allow any *.vercel.app subdomain (covers preview deploys)
-    if (origin.endsWith('.vercel.app')) return callback(null, true);
-    // Allow whitelisted origins
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    // Allow localhost in development
-    if (origin.match(/^https?:\/\/localhost(:\d+)?$/)) return callback(null, true);
-    callback(new Error('Not allowed by CORS'));
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:4200",
+    "https://spiffy-cuchufli-9bd432.netlify.app",
+    "https://techtrack-student.vercel.app",
+    "https://techtrack-staff.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
 
-// Handle preflight across all routes
-app.options('*', cors());
+// ✅ Handle preflight requests
+app.options("*", cors());
 
-// Body parsers
+
+// ✅ Body parsers
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+
+// ✅ Logger
 app.use(morgan('dev'));
 
-// Serve uploaded files
+
+// ✅ Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Routes
+
+// ✅ Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/projects', require('./routes/projects'));
 app.use('/api/users', require('./routes/users'));
@@ -56,28 +51,55 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/chat', require('./routes/chat'));
 app.use('/api/documents', require('./routes/documents'));
 
-// Health check
+
+// ✅ Health check (IMPORTANT for testing)
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'TechTrack API is running', timestamp: new Date() });
+  res.json({
+    success: true,
+    message: 'TechTrack API is running',
+    timestamp: new Date()
+  });
 });
 
-// 404 handler
+
+// ✅ Root route (to check server quickly)
+app.get('/', (req, res) => {
+  res.send('TechTrack Backend Running 🚀');
+});
+
+
+// ❌ 404 handler
 app.use((req, res) => {
-  res.status(404).json({ success: false, message: `Route ${req.originalUrl} not found` });
+  res.status(404).json({
+    success: false,
+    message: `Route ${req.originalUrl} not found`
+  });
 });
 
-// Error handler
+
+// ❌ Global error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
+
   if (err.name === 'MulterError') {
-    return res.status(400).json({ success: false, message: `Upload error: ${err.message}` });
+    return res.status(400).json({
+      success: false,
+      message: `Upload error: ${err.message}`
+    });
   }
-  res.status(500).json({ success: false, message: 'Internal server error' });
+
+  res.status(500).json({
+    success: false,
+    message: err.message || 'Internal server error'
+  });
 });
 
+
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => {
-  console.log(`TechTrack server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+  console.log(`TechTrack server running on port ${PORT}`);
 });
 
 module.exports = app;
